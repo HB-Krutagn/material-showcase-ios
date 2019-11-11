@@ -63,6 +63,10 @@ public class MaterialShowcaseInstructionView: UIView {
   
   /// Configures and adds primary label view
   private func addPrimaryLabel() {
+    if primaryLabel != nil {
+      primaryLabel.removeFromSuperview()
+    }
+    
     primaryLabel = UILabel()
     
     if let font = primaryTextFont {
@@ -75,20 +79,6 @@ public class MaterialShowcaseInstructionView: UIView {
     primaryLabel.numberOfLines = 0
     primaryLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
     primaryLabel.text = primaryText
-    
-    //    // Calculate x position
-    //    let xPosition = backgroundView.frame.minX > 0 ?
-    //      backgroundView.frame.minX + LABEL_MARGIN : LABEL_MARGIN
-    //
-    //    // Calculate y position
-    //    var yPosition: CGFloat!
-    //
-    //    if getTargetPosition(target: targetView, container: containerView) == .above {
-    //      yPosition = center.y + TEXT_CENTER_OFFSET
-    //    } else {
-    //      yPosition = center.y - TEXT_CENTER_OFFSET - LABEL_DEFAULT_HEIGHT * 2
-    //    }
-    
     primaryLabel.frame = CGRect(x: 0,
                                 y: 0,
                                 width: getWidth(),
@@ -99,6 +89,10 @@ public class MaterialShowcaseInstructionView: UIView {
   
   /// Configures and adds secondary label view
   private func addSecondaryLabel() {
+    if secondaryLabel != nil {
+      secondaryLabel.removeFromSuperview()
+    }
+    
     secondaryLabel = UILabel()
     if let font = secondaryTextFont {
       secondaryLabel.font = font
@@ -109,7 +103,7 @@ public class MaterialShowcaseInstructionView: UIView {
     secondaryLabel.textAlignment = self.secondaryTextAlignment ?? .left
     secondaryLabel.lineBreakMode = NSLineBreakMode.byWordWrapping
     secondaryLabel.text = secondaryText
-    secondaryLabel.numberOfLines = 3
+    secondaryLabel.numberOfLines = 0
     
     secondaryLabel.frame = CGRect(x: 0,
                                   y: primaryLabel.frame.height,
@@ -117,21 +111,21 @@ public class MaterialShowcaseInstructionView: UIView {
                                   height: 0)
     secondaryLabel.sizeToFitHeight()
     addSubview(secondaryLabel)
-    frame = CGRect(x: frame.minX, y: frame.minY, width: getWidth(), height: primaryLabel.frame.height + secondaryLabel.frame.height)
+    frame = CGRect(x: frame.minX, y: frame.minY, width: frame.width, height: primaryLabel.frame.height + secondaryLabel.frame.height)
   }
   
   //Calculate width per device
   private func getWidth() -> CGFloat{
     //superview was left side
     if (self.superview?.frame.origin.x)! < CGFloat(0) {
-        return frame.width - (frame.minX/2)
+      return frame.width - (frame.minX/2)
     } else if ((self.superview?.frame.origin.x)! + (self.superview?.frame.size.width)! >
-        UIScreen.main.bounds.width) { //superview was right side
-        return (frame.width - frame.minX)/2
+      UIScreen.main.bounds.width) { //superview was right side
+      return (frame.width - frame.minX)/2
     }
     return (frame.width - frame.minX)
   }
-    
+  
   /// Overrides this to add subviews. They will be drawn when calling show()
   public override func layoutSubviews() {
     super.layoutSubviews()

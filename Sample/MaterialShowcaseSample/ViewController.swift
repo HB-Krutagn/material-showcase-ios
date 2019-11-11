@@ -12,30 +12,60 @@ import MaterialShowcase
 class ViewController: UIViewController {
   
   var tutorialStep = 1
-    
+  
   @IBOutlet weak var searchItem: UIBarButtonItem!
   @IBOutlet weak var tabBar: UITabBar!
   @IBOutlet weak var button: UIButton!
   @IBOutlet weak var tableView: UITableView!
   
+  var sequence = MaterialShowcaseSequence()
+  
   // Mock data for table view
   let animals = ["Dolphin", "Penguin", "Panda", "Neko", "Inu"]
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     tableView.dataSource = self
   }
   
+  override func viewDidAppear(_ animated: Bool) {
+    let showcase1 = MaterialShowcase()
+    showcase1.setTargetView(view: button)
+    showcase1.primaryText = "Action 1"
+    showcase1.secondaryText = "Click here to go into details"
+    showcase1.shouldSetTintColor = false // It should be set to false when button uses image.
+    showcase1.backgroundPromptColor = UIColor.blue
+    showcase1.isTapRecognizerForTargetView = true
+    
+    let showcase2 = MaterialShowcase()
+    showcase2.setTargetView(barButtonItem: searchItem)
+    showcase2.primaryText = "Action 1.1"
+    showcase2.secondaryText = "Click here to go into details"
+    showcase2.isTapRecognizerForTargetView = true
+    
+    let showcase3 = MaterialShowcase()
+    showcase3.setTargetView(tableView: self.tableView, section: 0, row: 2)
+    showcase3.primaryText = "Action 3"
+    showcase3.secondaryText = "Click here to go into details"
+    showcase3.isTapRecognizerForTargetView = false
+    
+    showcase1.delegate = self
+    showcase2.delegate = self
+    showcase3.delegate = self
+    
+    sequence.temp(showcase1).temp(showcase2).temp(showcase3).setKey(key: "eve").start()
+  }
+  
   @IBAction func showButton(_ sender: Any) {
     let showcase = MaterialShowcase()
-    showcase.setTargetView(view: button)
+    showcase.setTargetView(button: button, tapThrough: true)
     showcase.primaryText = "Action 1"
     showcase.secondaryText = "Click here to go into details"
     showcase.shouldSetTintColor = false // It should be set to false when button uses image.
     showcase.backgroundPromptColor = UIColor.blue
-    showcase.isTapRecognizerForTagretView = true
-    showcase.delegate = self
+    showcase.isTapRecognizerForTargetView = true
     showcase.show(completion: {
-        print("==== completion Action 1 ====")
+      print("==== completion Action 1 ====")
       // You can save showcase state here
     })
   }
@@ -45,9 +75,9 @@ class ViewController: UIViewController {
     showcase.setTargetView(view: sender)
     showcase.primaryText = "Action 1.1"
     showcase.secondaryText = "Click here to go into details"
-    showcase.isTapRecognizerForTagretView = true
+    showcase.isTapRecognizerForTargetView = true
     showcase.show(completion: {
-        print("==== completion Action 1.1 ====")
+      print("==== completion Action 1.1 ====")
       // You can save showcase state here
     })
   }
@@ -64,27 +94,29 @@ class ViewController: UIViewController {
     showcase.primaryText = "Action 2"
     showcase.secondaryText = "Click here to go into long long long long long long long long long long long long long long long details"
     showcase.secondaryTextSize = 14
-    showcase.isTapRecognizerForTagretView = true
+    showcase.isTapRecognizerForTargetView = true
     showcase.skipText = "Skip AppTour"
     showcase.isSkipButtonVisible = true
     showcase.skipButtonBackgroundColor = UIColor.red
 //    showcase.targetTransparent = false
     // Delegate to handle other action after showcase is dismissed.
-    showcase.delegate = self
+    //        showcase.delegate = self
     showcase.show(completion: {
       // You can save showcase state here
-         print("==== completion Action 2 ====")
+      print("==== completion Action 2 ====")
     })
   }
   
   @IBAction func showTabBar(_ sender: Any) {
     let showcase = MaterialShowcase()
-    showcase.setTargetView(tabBar: tabBar, itemIndex: 0)
-    showcase.backgroundViewType = .full
+    showcase.setTargetView(tabBar: tabBar, itemIndex: 0, tapThrough: true)
+    showcase.backgroundViewType = .circle
+    showcase.targetTintColor = UIColor.clear
+    showcase.targetHolderColor = UIColor.clear
     showcase.primaryText = "Action 3"
     showcase.secondaryText = "Click here to go into details"
-    showcase.isTapRecognizerForTagretView = true
-    showcase.delegate = self
+    showcase.isTapRecognizerForTargetView = true
+    //        showcase.delegate = self
     showcase.show(completion: nil)
   }
   
@@ -93,8 +125,7 @@ class ViewController: UIViewController {
     showcase.setTargetView(tableView: tableView, section: 0, row: 2)
     showcase.primaryText = "Action 3"
     showcase.secondaryText = "Click here to go into details"
-    showcase.isTapRecognizerForTagretView = true
-    showcase.delegate = self
+    showcase.isTapRecognizerForTargetView = false
     showcase.show(completion: nil)
   }
   @IBAction func showInSeries(_ sender: UIButton) {

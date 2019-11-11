@@ -87,16 +87,13 @@ extension MaterialShowcaseController: MaterialShowcaseDelegate {
   public func showCaseWillDismiss(showcase: MaterialShowcase, didTapTarget: Bool) {
     delegate?.materialShowcaseController(self, materialShowcaseWillDisappear: showcase, forIndex: currentIndex)
   }
+  
   public func showCaseDidDismiss(showcase: MaterialShowcase, didTapTarget: Bool) {
     delegate?.materialShowcaseController(self, materialShowcaseDidDisappear: showcase, forIndex: currentIndex)
     currentShowcase = nil
     if started {
       self.nextShowcase()
     }
-  }
-  public func showCaseSkipped(showcase: MaterialShowcase) {
-    print("print skip")
-    self.stop()
   }
 }
 

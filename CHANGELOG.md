@@ -1,5 +1,84 @@
 Change Log
 ==========
+Version 0.7.0 *(2019-10-29)*
+--------------------------------
+* Allow to set the background radius
+
+Version 0.7.0 *(2019-10-09)*
+--------------------------------
+* Add 'tapThrough' functions for UIButton, UIBarButtonItem, UITabBarItem for handling predefined actions
+* Able to adjust the background view's alpha
+* Fix the Carthage integration issue
+
+Version 0.6.6 *(2019-08-21)*
+--------------------------------
+* Update to Swift 5.0
+
+Version 0.6.5 *(2019-02-26)*
+--------------------------------
+* Allow subtitle instruction text to have more than 3 lines
+
+Version 0.6.4 *(2018-11-10)*
+-------------------------------
+* Fix issue #74 and #81 concerning primary and secondary label overlap when some libraries override UIView control methods.
+
+Version 0.6.3 *(2018-09-30)*
+-------------------------------
+* Update to Swift 4.2
+* Fix a spelling in API 
+
+### Upgrade note
+If it's possible to change the *Swift* **version** follow this:
+* Update your project *Swift* version to **4.2**, to avoid getting `'KeyframeAnimationOptions' is not a member type of 'UIView'` error for supporting the `Swift 4.2`.
+
+Otherwise: 
+* If your project swift version is not 4.2, add below the Cocoapods script to your `Podfile` and run `pod install` after that:
+```
+# platform :ios, '9.0'
+
+target 'YOUR_PROJECT_NAME' do
+  use_frameworks!
+
+  pod 'MaterialShowcase'
+
+  post_install do |installer|
+    installer.pods_project.targets.each do |target|
+      if target.name.include?('MaterialShowcase')
+        target.build_configurations.each do |config|
+           config.build_settings['SWIFT_VERSION'] = '4.2'
+        end
+      end
+    end
+  end
+
+end
+```
+
+Version 0.6.2 *(2018-07-18)*
+-------------------------------
+* Fix bugs
+
+Version 0.6.1 *(2018-06-04)*
+-------------------------------
+* Add Carthage support
+* Add user-tap check property
+
+### Upgrade note
+
+* Changed the [signature of delegate methods](https://github.com/aromajoin/material-showcase-ios#handle-showcase-status).
+
+Please, update delegate methods :
+```swift
+func showCaseWillDismiss(showcase: MaterialShowcase)
+func showCaseDidDismiss(showcase: MaterialShowcase)
+```
+to:
+```swift
+func showCaseWillDismiss(showcase: MaterialShowcase, didTapTarget:Bool)
+
+func showCaseDidDismiss(showcase: MaterialShowcase, didTapTarget:Bool)
+```
+
 Version 0.6.0 *(2018-05-09)*
 --------------------------------
 * Add fullscreen mode in addition to circle background

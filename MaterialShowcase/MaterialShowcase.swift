@@ -14,15 +14,15 @@ import UIKit
   @objc optional func showCaseDidDismiss(showcase: MaterialShowcase, didTapTarget:Bool)
 }
 
-public class MaterialShowcase: UIView {
-
+open class MaterialShowcase: UIView {
+  
   @objc public enum BackgroundTypeStyle: Int {
     case circle //default
     case full//full screen
   }
 
   // MARK: Material design guideline constant
-  let BACKGROUND_ALPHA: CGFloat = 0.96
+  let BACKGROUND_PROMPT_ALPHA: CGFloat = 0.96
   let TARGET_HOLDER_RADIUS: CGFloat = 44
   let TEXT_CENTER_OFFSET: CGFloat = 44 + 20
   let INSTRUCTIONS_CENTER_OFFSET: CGFloat = 20
@@ -54,17 +54,21 @@ public class MaterialShowcase: UIView {
   var targetCopyView: UIView!
   var instructionView: MaterialShowcaseInstructionView!
   var skipButtonView: SkipButtonView!
-
+  
+  var onTapThrough: (() -> Void)?
+  
   // MARK: Public Properties
 
   // Background
+  @objc public var backgroundAlpha: CGFloat = 1.0
   @objc public var backgroundPromptColor: UIColor!
   @objc public var backgroundPromptColorAlpha: CGFloat = 0.0
   @objc public var backgroundViewType: BackgroundTypeStyle = .circle
+  @objc public var backgroundRadius: CGFloat = -1.0 // If the value is negative, calculate the radius automatically
   // Tap zone settings
   // - false: recognize tap from all displayed showcase.
   // - true: recognize tap for targetView area only.
-  @objc public var isTapRecognizerForTagretView: Bool = false
+
   // Skip button
   @objc public var isSkipButtonVisible: Bool = false
   @objc public var skipTextFont: UIFont?
@@ -77,6 +81,7 @@ public class MaterialShowcase: UIView {
   @objc public var skipButtonMarginTop: CGFloat = 20
   @objc public var skipButtonMarginRight: CGFloat = 20
   @objc public var skipButtonMarginBottom: CGFloat = 20
+  @objc public var isTapRecognizerForTargetView: Bool = false
   // Target
   @objc public var shouldSetTintColor: Bool = true
   @objc public var targetTintColor: UIColor!
@@ -139,19 +144,36 @@ extension MaterialShowcase {
   }
 
   /// Sets a UIBarButtonItem as target
-  @objc public func setTargetView(barButtonItem: UIBarButtonItem) {
+  @objc public func setTargetView(button: UIButton, tapThrough: Bool = false) {
+    targetView = button
+    let tintColor = button.titleColor(for: .normal)
+    targetTintColor = tintColor
+    backgroundPromptColor = tintColor
+    if tapThrough {
+      onTapThrough = { button.sendActions(for: .touchUpInside)  }
+    }
+  }
+  
+  /// Sets a UIBarButtonItem as target
+  @objc public func setTargetView(barButtonItem: UIBarButtonItem, tapThrough: Bool = false) {
     if let view = (barButtonItem.value(forKey: "view") as? UIView)?.subviews.first {
       targetView = view
+      if tapThrough {
+        onTapThrough = { _ = barButtonItem.target?.perform(barButtonItem.action, with: nil) }
+      }
     }
   }
 
   /// Sets a UITabBar Item as target
-  @objc public func setTargetView(tabBar: UITabBar, itemIndex: Int) {
+  @objc public func setTargetView(tabBar: UITabBar, itemIndex: Int, tapThrough: Bool = false) {
     let tabBarItems = orderedTabBarItemViews(of: tabBar)
     if itemIndex < tabBarItems.count {
       targetView = tabBarItems[itemIndex]
       targetTintColor = tabBar.tintColor
       backgroundPromptColor = tabBar.tintColor
+      if tapThrough {
+        onTapThrough = { tabBar.selectedItem = tabBar.items?[itemIndex] }
+      }
     } else {
       print ("The tab bar item index is out of range")
     }
@@ -177,29 +199,30 @@ extension MaterialShowcase {
     let center = backgroundView.center
 
     backgroundView.transform = CGAffineTransform(scaleX: scale, y: scale) // Initial set to support animation
-    self.backgroundView.center = self.targetHolderView.center
+    backgroundView.center = targetHolderView.center
     if animated {
       UIView.animate(withDuration: aniComeInDuration, animations: {
         self.targetHolderView.transform = CGAffineTransform(scaleX: 1, y: 1)
         self.backgroundView.transform = CGAffineTransform(scaleX: 1, y: 1)
         self.backgroundView.center = center
-        self.alpha = 1.0
+
+        // self.alpha = 1.0
         /// congnguyen91 add
         if self.targetTransparent {
           self.targetHolderView.alpha = 0.0
         }
         /// congnguyen91 end add
+        self.alpha = self.backgroundAlpha
       }, completion: { _ in
         self.startAnimations()
       })
     } else {
-      self.alpha = 1.0
+      alpha = backgroundAlpha
     }
     // Handler user's action after showing.
-    if let handler = handler {
-      handler()
-    }
+    handler?()
   }
+  
 }
 
 // MARK: - Utility API
@@ -207,10 +230,10 @@ extension MaterialShowcase {
   /// Returns the current showcases displayed on screen.
   /// It will return null if no showcase exists.
   public static func presentedShowcases() -> [MaterialShowcase]? {
-    guard let window = UIApplication.shared.delegate?.window else {
+    guard let window = UIApplication.shared.keyWindow else {
       return nil
     }
-    return window?.subviews.filter({ (view) -> Bool in
+    return window.subviews.filter({ (view) -> Bool in
       return view is MaterialShowcase
     }) as? [MaterialShowcase]
   }
@@ -222,7 +245,7 @@ extension MaterialShowcase {
   /// Initializes default view properties
   func configure() {
     backgroundColor = UIColor.clear
-    guard let window = UIApplication.shared.delegate?.window else {
+    guard let window = UIApplication.shared.keyWindow else {
       return
     }
     containerView = window
@@ -232,7 +255,7 @@ extension MaterialShowcase {
   func setDefaultProperties() {
     // Background
     backgroundPromptColor = BACKGROUND_DEFAULT_COLOR
-    backgroundPromptColorAlpha = BACKGROUND_ALPHA
+    backgroundPromptColorAlpha = BACKGROUND_PROMPT_ALPHA
     // Target view
     targetTintColor = BACKGROUND_DEFAULT_COLOR
     targetHolderColor = TARGET_HOLDER_COLOR
@@ -264,7 +287,7 @@ extension MaterialShowcase {
   }
 
   func startAnimations() {
-    let options: UIViewKeyframeAnimationOptions = [.curveEaseInOut, .repeat]
+    let options: UIView.KeyframeAnimationOptions = [.curveEaseInOut, .repeat]
     UIView.animateKeyframes(withDuration: 1, delay: 0, options: options, animations: {
       UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.5, animations: {
         self.targetRippleView.alpha = self.ANI_RIPPLE_ALPHA
@@ -307,16 +330,15 @@ extension MaterialShowcase {
 
     // Disable subview interaction to let users click to general view only
     subviews.forEach({$0.isUserInteractionEnabled = false})
-
-    if isTapRecognizerForTagretView {
+    if isTapRecognizerForTargetView {
       //Add gesture recognizer for targetCopyView
       hiddenTargetHolderView.addGestureRecognizer(tapGestureRecoganizer())
       hiddenTargetHolderView.isUserInteractionEnabled = true
     } else {
       // Add gesture recognizer for both container and its subview
       addGestureRecognizer(tapGestureRecoganizer())
-	  hiddenTargetHolderView.addGestureRecognizer(tapGestureRecoganizer())
-	  hiddenTargetHolderView.isUserInteractionEnabled = true
+      hiddenTargetHolderView.addGestureRecognizer(tapGestureRecoganizer())
+      hiddenTargetHolderView.isUserInteractionEnabled = true
     }
 
     if isSkipButtonVisible {
@@ -330,18 +352,18 @@ extension MaterialShowcase {
 
   /// Add background which is a big circle
   private func addBackground() {
-
     switch self.backgroundViewType {
     case .circle:
-      let radius: CGFloat!
-      let center = targetRippleView.center//getOuterCircleCenterPoint(for: targetCopyView)
-
-      if UIDevice.current.userInterfaceIdiom == .pad {
-        radius = 300.0
+      let radius: CGFloat
+      
+      if backgroundRadius < 0 {
+        radius = getDefaultBackgroundRadius()
       } else {
-        radius = getOuterCircleRadius(center: center, textBounds: instructionView.frame, targetBounds: targetRippleView.frame)
+        radius = backgroundRadius
       }
-
+      
+      let center = targetRippleView.center
+      
       backgroundView = UIView(frame: CGRect(x: 0, y: 0, width: radius * 2,height: radius * 2))
       backgroundView.center = center
 
@@ -363,7 +385,7 @@ extension MaterialShowcase {
 
         // Create the path.
         let path = UIBezierPath(rect: self.bounds)
-        maskLayer.fillRule = kCAFillRuleEvenOdd
+        maskLayer.fillRule = CAShapeLayerFillRule.evenOdd
 
         // Append the circle to the path so that it is subtracted.
         path.append(UIBezierPath(ovalIn: rect))
@@ -383,20 +405,28 @@ extension MaterialShowcase {
     backgroundView.backgroundColor = backgroundPromptColor.withAlphaComponent(backgroundPromptColorAlpha)
     insertSubview(backgroundView, belowSubview: targetRippleView)
     addBackgroundMask(with: targetHolderRadius, in: backgroundView)
-
+  }
+  
+  private func getDefaultBackgroundRadius() -> CGFloat{
+    var radius: CGFloat = 0.0
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      radius = 300.0
+    } else {
+      radius = getOuterCircleRadius(center: center, textBounds: instructionView.frame, targetBounds: targetRippleView.frame)
+    }
+    return radius
   }
 
   private func addBackgroundMask(with radius: CGFloat, in view: UIView) {
-
     let center = backgroundViewType == .circle ? view.bounds.center : targetRippleView.center
     let mutablePath = CGMutablePath()
     mutablePath.addRect(view.bounds)
-    mutablePath.addArc(center: center, radius: radius, startAngle: 0.0, endAngle: 2 * 3.14, clockwise: false)
-
+    mutablePath.addArc(center: center, radius: radius, startAngle: 0.0, endAngle: 2 * .pi, clockwise: false)
+    
     let mask = CAShapeLayer()
     mask.path = mutablePath
-    mask.fillRule = kCAFillRuleEvenOdd
-
+    mask.fillRule = CAShapeLayerFillRule.evenOdd
+    
     view.layer.mask = mask
   }
 
@@ -408,7 +438,6 @@ extension MaterialShowcase {
     targetRippleView.alpha = 0.0 //set it invisible
     targetRippleView.asCircle()
     addSubview(targetRippleView)
-
   }
 
   /// A circle-shape background view of target view
@@ -509,9 +538,7 @@ extension MaterialShowcase {
       }
     } else {
       if getTargetPosition(target: targetView, container: containerView) == .above {
-
         yPosition = center.y + TARGET_PADDING +  (targetView.bounds.height / 2 > self.targetHolderRadius ? targetView.bounds.height / 2 : self.targetHolderRadius)
-
       } else {
         yPosition = center.y - TEXT_CENTER_OFFSET - LABEL_DEFAULT_HEIGHT * 2
       }
@@ -613,12 +640,12 @@ extension MaterialShowcase {
   }
 
   @objc private func tapGestureSelector(tapGesture:UITapGestureRecognizer) {
-	completeShowcase(didTapTarget: tapGesture.view === hiddenTargetHolderView)
+    completeShowcase(didTapTarget: tapGesture.view === hiddenTargetHolderView)
   }
 
   /// Default action when dimissing showcase
   /// Notifies delegate, removes views, and handles out-going animation
-	@objc public func completeShowcase(animated: Bool = true, didTapTarget: Bool = false) {
+  @objc public func completeShowcase(animated: Bool = true, didTapTarget: Bool = false) {
     if delegate != nil && delegate?.showCaseDidDismiss != nil {
       delegate?.showCaseWillDismiss?(showcase: self, didTapTarget: didTapTarget)
     }
@@ -647,6 +674,10 @@ extension MaterialShowcase {
     }
     if delegate != nil && delegate?.showCaseDidDismiss != nil {
       delegate?.showCaseDidDismiss?(showcase: self, didTapTarget: didTapTarget)
+    }
+    
+    if didTapTarget {
+      onTapThrough?()
     }
   }
 
