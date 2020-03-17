@@ -577,6 +577,26 @@ extension MaterialShowcase {
     let skipButtonPosition = calculateSkipButtonPosition(with: backgroundView.frame)
     skipButtonView.frame = CGRect(x: skipButtonPosition.x, y: skipButtonPosition.y, width: skipButtonView.frame.width, height: skipButtonView.frame.height)
 
+        skipButtonView.clickCallback = { [weak self] in
+        guard let weakSelf = self else { return }
+        weakSelf.targetRippleView.removeFromSuperview()
+        UIView.animateKeyframes(withDuration: weakSelf.aniGoOutDuration, delay: 0, options: [.calculationModeLinear], animations: {
+          UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 3/5, animations: {
+            weakSelf.targetHolderView.transform = CGAffineTransform(scaleX: 0.4, y: 0.4)
+            weakSelf.backgroundView.transform = CGAffineTransform(scaleX: 1.3, y: 1.3)
+            weakSelf.backgroundView.alpha = 0
+          })
+          UIView.addKeyframe(withRelativeStartTime: 3/5, relativeDuration: 2/5, animations: {
+            weakSelf.alpha = 0
+          })
+        }, completion: { (success) in
+          // Recycle subviews
+          weakSelf.recycleSubviews()
+          // Remove it from current screen
+          weakSelf.removeFromSuperview()
+        })
+    }
+
 //    if UIDevice.current.userInterfaceIdiom == .pad {
 //        self.backgroundColor = UIColor.black.withAlphaComponent(0.3)
 //        addSubview(skipButtonView)
