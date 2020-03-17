@@ -39,6 +39,8 @@ public class SkipButtonView: UIView {
     public weak var delegate: MaterialShowcaseDelegate?
     public var showcaseViewTag: Int!
     
+    public var clickCallback    :   (() -> ())?
+    
     public init(with text: String, size: CGFloat) {
         #if swift(>=4.0)
             let skipTextBound: CGSize = text.size(withAttributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: size)])
@@ -111,6 +113,7 @@ public class SkipButtonView: UIView {
             let view = self.superview?.viewWithTag(showcaseViewTag) as! MaterialShowcase
             delegate?.showCaseSkipped?(showcase: view)
         }
+        clickCallback?()
     }
     
     /// Overrides this to add subviews. They will be drawn when calling show()
