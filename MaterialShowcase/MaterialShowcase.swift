@@ -26,7 +26,7 @@ open class MaterialShowcase: UIView {
   let TARGET_HOLDER_RADIUS: CGFloat = 44
   let TEXT_CENTER_OFFSET: CGFloat = 44 + 20
   let INSTRUCTIONS_CENTER_OFFSET: CGFloat = 20
-  let LABEL_MARGIN: CGFloat = 40
+  let LABEL_MARGIN: CGFloat = 20//40
   let TARGET_PADDING: CGFloat = 20
 
   // Other default properties
