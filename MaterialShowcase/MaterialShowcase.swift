@@ -30,7 +30,7 @@ open class MaterialShowcase: UIView {
   let TARGET_PADDING: CGFloat = 20
 
   // Other default properties
-  let LABEL_DEFAULT_HEIGHT: CGFloat = 50
+  let LABEL_DEFAULT_HEIGHT: CGFloat = 80
   let BACKGROUND_DEFAULT_COLOR = UIColor.fromHex(hexString: "#2196F3")
   let TARGET_HOLDER_COLOR = UIColor.white
 
